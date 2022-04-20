@@ -47,6 +47,8 @@ public class OrderMenu extends JFrame {
 
 	public static void main(String[] args) {
 
+	connectDb();
+
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -265,6 +267,42 @@ public class OrderMenu extends JFrame {
 		tbl_cart.getColumnModel().getColumn(3).setMinWidth(60);
 		pane_cart.setViewportView(tbl_cart);
 
+		ResultSet ps = null;
+		int qtyInput = (Integer)spin_qty.getValue();
+		int idInput = txt_addId.getText();
+		
+		btnConfirmOrder.addActionListener(new ActionListener(){
+			public void actionPeformed(ActionEvent e){
+				String query = "Select * from product where product_id = " + idInput;
+				ps = pst.executeQuery(query);
+
+				//update item stock after adding to cart
+				try{
+					while(rs.next()){
+						int stockUpdate = (rs.getInt("product_qnty")) - qtyInput;
+						String prodUpdate = "Update product set product_qnty = "+ stockUpdate +"where product_id = "+idInput;
+					}
+					pst.executeUpdate(prodUpdate);
+				}catch(SQLException e1){
+					e1.printStackTrace;
+				}
+				
+				//add item details to cart
+				try{
+					while(rs.next()){
+						int id = rs.getInt("product_id");
+						String name = rs.getString("product_name");
+						int qty = qtyInput;
+						int price = (rs.getInt("product_price")) * qty;
+						tbl_cart.addRow(new Object[][]{id, name, qty, price});
+					}
+				}catch(SQLException e1){
+					e1.printStackTrace;
+				}
+			}
+		});
+
+
 		JLabel lblNewLabel_1 = new JLabel("Remove Item(ID):");
 		GridBagConstraints gbc_lblNewLabel_1 = new GridBagConstraints();
 		gbc_lblNewLabel_1.anchor = GridBagConstraints.EAST;
@@ -289,6 +327,27 @@ public class OrderMenu extends JFrame {
 		gbc_btnConfirmRemove.gridx = 5;
 		gbc_btnConfirmRemove.gridy = 4;
 		order_payment.add(btnConfirmRemove, gbc_btnConfirmRemove);
+
+		btnConfirmRemove.addActionListener(new ActionListener(){
+			public void actionPeformed(ActionEvent e){
+				tbl_cart.removeRow()
+
+				String query = "Select * from product where product_id = " + idInput;
+				ps = pst.executeQuery(query);
+
+				//update item stock after removing from cart
+				try{
+					while(rs.next()){
+					int stockUpdate = (rs.getInt("product_qnty")) + qtyInput;
+					String prodUpdate = "Update product set product_qnty = "+ stockUpdate +"where product_id = "+idInput;
+					}
+					pst.executeUpdate(prodUpdate);
+				}catch(SQLException e1){
+					e1.printStackTrace;
+				}
+			}
+		});
+
 
 		JButton btnPromos = new JButton("Promos");
 		GridBagConstraints gbc_btnPromos = new GridBagConstraints();
